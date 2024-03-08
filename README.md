@@ -3,4 +3,4 @@
   Forgot password functionality is also added. A password reset link will be sent via registered email.
 
 # Website link [yourNotesApp](https://yournotesapp123.netlify.app/login)
-# Backend Link [Backend link](https://github.com/dan1sh15/yourNotesApp-Frontend)
+# Frontend Link [Frontend link](https://github.com/dan1sh15/yourNotesApp-Frontend)
