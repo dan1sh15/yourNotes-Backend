@@ -50,14 +50,14 @@ exports.resetPasswordToken = async (req, res) => {
           </style>
         </head>
         <body style="font-family: 'Poppins', sans-serif;
-        font-weight: 500;
-        font-style: normal;
-        margin: 0;    
-        padding: 5vh 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #e6e3ff;
+            font-weight: 500;
+            font-style: normal;
+            margin: 0;    
+            padding: 5vh 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e6e3ff;
         ">
           <div class="container " style="max-width: 600px;
           width: 80%;
