@@ -1,15 +1,74 @@
 const User = require("../models/User");
+const OTP = require("../models/Otp");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const otpGenerator = require("otp-generator");
 require("dotenv").config(); 
 
+exports.sendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        const duplicateUser = await User.findOne({email});
+
+        if(duplicateUser) {
+            return res.status(400).json({
+                success: false,
+                message: "User is already registered, please login",
+            });
+        }
+
+        let otp = otpGenerator.generate(6, {
+            upperCaseAlphabets: false,
+            lowerCaseAlphabets: false,
+            specialChars: false,
+        });
+
+        console.log("Otp generated", otp);
+
+        let result = await OTP.findOne({otp});
+
+        while(result) {
+            otp = otpGenerator.generate(6, {
+                upperCaseAlphabets: false,
+                lowerCaseAlphabets: false,
+                specialChars: false,
+            });
+
+            result = await OTP.findOne({otp});
+        }
+
+
+        const otpPayload = {
+            email,
+            otp
+        };
+
+        const otpBody = await OTP.create(otpPayload);
+        console.log(otpBody);
+
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent successfully",
+            otp,
+        });
+        
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
 
 exports.signup = async (req, res) => {
     try {
         
-        const {name, email, password, confirmPassword} = req.body;
+        const {name, email, password, confirmPassword, otp} = req.body;
 
-        if(!name || !email || !password || !confirmPassword) {
+        if(!name || !email || !password || !confirmPassword || !otp) {
             return res.status(403).json({
                 success: false,
                 message: "Please fill all the required field properly",
@@ -31,9 +90,27 @@ exports.signup = async (req, res) => {
             });
         }
 
+        const currentOtp = await OTP.find({email}).sort({createdAt: -1}).limit(1);
+        console.log("The OTP at DB is: ", currentOtp[0].otp);
+
+        const recentOtp = currentOtp[0].otp;
+
+        if(recentOtp.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Otp not found"
+            });
+        }
+
+        if(recentOtp !== otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Otp"
+            });
+        }
+
         // hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
-
         
         const userData = await User.create({
             name,
@@ -48,7 +125,7 @@ exports.signup = async (req, res) => {
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: "2h"
+            expiresIn: "24h"
         });
 
         return res.status(200).json({
